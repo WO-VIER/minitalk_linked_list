@@ -6,7 +6,7 @@
 /*   By: vwautier <vwautier@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/11 18:26:56 by vwautier          #+#    #+#             */
-/*   Updated: 2025/04/11 19:01:16 by vwautier         ###   ########.fr       */
+/*   Updated: 2025/04/12 01:00:35 by vwautier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,9 @@ void	free_list(t_node **head)
 {
 	t_node	*current;
 	t_node	*next;
+
+	if (!head || !*head)
+		return ;
 
 	current = *head;
 	while (current)

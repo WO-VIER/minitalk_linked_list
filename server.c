@@ -6,13 +6,11 @@
 /*   By: vwautier <vwautier@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/03 13:55:28 by vwautier          #+#    #+#             */
-/*   Updated: 2025/04/12 00:52:26 by vwautier         ###   ########.fr       */
+/*   Updated: 2025/04/12 13:53:18 by vwautier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
-
-//static t_node *g_message = NULL;
 
 /*
 ** 1. Dans signalhandler:
@@ -29,15 +27,6 @@
 **   pour lancer le signalhandler et bloque les signaux SIGUSR 1 et 2
 **   pendant le traitement
 */
-
-static t_node	*g_message = NULL;
-
-static void	sigint_handler(int sig)
-{
-	(void)sig;
-	free_list(&g_message);
-	exit(EXIT_SUCCESS);
-}
 
 static void	charprocess(char *c, int *bit, t_node **list)
 {
@@ -66,7 +55,8 @@ static void	signalhandler(int sig, siginfo_t *info, void *context)
 	static char		c = 0;
 	static int		pids = 0;
 	static int		lastpid = 0;
-	//static t_node	*message = NULL;
+	static t_node	*message = NULL;
+
 	(void)context;
 	pids = info->si_pid;
 	if (pids != lastpid)
@@ -74,12 +64,17 @@ static void	signalhandler(int sig, siginfo_t *info, void *context)
 		lastpid = pids;
 		bit = 0;
 		c = 0;
-		free_list(&g_message);
+		free_list(&message);
 	}
 	if (sig == SIGUSR1)
 		c |= (0b10000000 >> bit);
-	charprocess(&c, &bit, &g_message);
-	kill(pids, SIGUSR1);
+	charprocess(&c, &bit, &message);
+	if (kill(pids, SIGUSR1) == -1)
+	{
+		write(2, "Error: Failed to send ack\n", 26);
+		free_list(&message);
+		exit(EXIT_FAILURE);
+	}
 }
 
 static void	signalsetup(struct sigaction *sa)
@@ -95,7 +90,6 @@ static void	signalsetup(struct sigaction *sa)
 		write(2, "ERROR : SIGACTION\n", 18);
 		exit(EXIT_FAILURE);
 	}
-	signal(SIGINT, sigint_handler);
 }
 
 int	main(int argc, char **argv)
